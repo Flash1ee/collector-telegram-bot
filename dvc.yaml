@@ -1,0 +1,9 @@
+stages:
+  test:
+    cmd: python ./src/dvc/main.py
+    deps:
+    - images/
+  train:
+    cmd: python3 ./src/dvc/main.py
+    deps:
+    - images/
