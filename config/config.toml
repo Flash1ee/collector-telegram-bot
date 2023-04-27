@@ -1,0 +1,9 @@
+[server]
+start_port = ":8082" # Deprecated
+
+[database]
+host = "postgres"
+port = "5432"
+database = "ppo"
+user = "bob"
+password = "admin"
