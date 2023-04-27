@@ -12,15 +12,16 @@ import (
 type Server struct {
 	config *config.ServerConfig
 	logger *logrus.Entry
+	token  string
 }
 
-func CreateServer(config *config.ServerConfig, logger *logrus.Entry) *Server {
-	return &Server{config: config, logger: logger}
+func CreateServer(config *config.ServerConfig, logger *logrus.Entry, token string) *Server {
+	return &Server{config: config, logger: logger, token: token}
 }
 
 func (s *Server) Start() {
 	pref := telebot.Settings{
-		Token:  "TOKEN",
+		Token:  s.token,
 		Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
 	}
 
