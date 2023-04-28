@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"collector-telegram-bot/internal/useCase"
 	"github.com/sirupsen/logrus"
 	tele "gopkg.in/telebot.v3"
 )
@@ -10,14 +11,15 @@ type GroupHandler interface {
 }
 
 type GroupTgHandler struct {
-	Log *logrus.Entry
+	log     *logrus.Entry
+	useCase useCase.GroupUseCase
 }
 
-func MakeGroupTgHandler(log *logrus.Entry) GroupHandler {
-	return &GroupTgHandler{Log: log}
+func MakeGroupTgHandler(log *logrus.Entry, useCase useCase.GroupUseCase) GroupHandler {
+	return &GroupTgHandler{log: log, useCase: useCase}
 }
 
 func (h *GroupTgHandler) Great(c tele.Context) error {
-	h.Log.Infof("Recieved message from %s, text = %s", c.Chat().Username, c.Text())
+	h.log.Infof("Recieved message from %s, text = %s", c.Chat().Username, c.Text())
 	return c.Send("Hello! Let's work together!")
 }
