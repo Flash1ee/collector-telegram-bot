@@ -3,6 +3,8 @@ package server
 import (
 	"collector-telegram-bot/config"
 	"collector-telegram-bot/internal/delivery"
+	repo "collector-telegram-bot/internal/repository"
+	"collector-telegram-bot/internal/useCase"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/telebot.v3"
@@ -30,11 +32,17 @@ func (s *Server) Start() {
 		s.logger.Fatalf("Server error: %s", fmt.Sprintf("%v", err))
 	}
 
-	privateHandler := delivery.MakePrivateTgHandler(s.logger)
-	groupHandler := delivery.MakeGroupTgHandler(s.logger)
+	repository := repo.MakePgRepository(s.logger)
+
+	privateUseCase := useCase.MakePrivateUseCase(s.logger, repository)
+	groupUseCase := useCase.MakeGroupUseCase(s.logger, repository)
+
+	privateHandler := delivery.MakePrivateTgHandler(s.logger, privateUseCase)
+	groupHandler := delivery.MakeGroupTgHandler(s.logger, groupUseCase)
 
 	b.Handle("/start", privateHandler.Start)
 	b.Handle("/info", privateHandler.Info)
+	b.Handle("/сессии", privateHandler.Sessions)
 	b.Handle("@collector_money_bot start", groupHandler.Great)
 
 	s.logger.Info("Server is working")
