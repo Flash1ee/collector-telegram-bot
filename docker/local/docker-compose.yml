@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  app:
+    container_name: app
+    build:
+      context: ../..
+      dockerfile: ./docker/base/Dockerfile
+    depends_on:
+      - pg
+      - migrations
+    restart: unless-stopped
+    command:
+      - "-t"
+      - ${BOT_TOKEN}
+
+  pg:
+    container_name: pg
+    image: postgres:14-alpine
+    expose:
+      - 5432
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PSWD}
+      POSTGRES_DB: ${DB_NAME}
+      PGDATA: "/data/lib/postgresql/data/pgdata"
+    volumes:
+      - pg_data_volume:/data/lib/postgresql/data
+    restart: unless-stopped
+
+  migrations:
+    build:
+      context: ../..
+      dockerfile: ./docker/base/Dockerfile.migrations
+    container_name: migrations
+    depends_on:
+      - pg
+    environment:
+      USER: ${DB_USER}
+      PSWD: ${DB_PSWD}
+      HOST: pg:5432
+      DB: ${DB_NAME}
+      WAIT_HOSTS: pg:5432
+
+volumes:
+  pg_data_volume:
