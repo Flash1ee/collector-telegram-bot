@@ -1,7 +1,7 @@
 package delivery
 
 import (
-	"collector-telegram-bot/internal/useCase"
+	"collector-telegram-bot/internal/usecase"
 	"github.com/sirupsen/logrus"
 	tele "gopkg.in/telebot.v3"
 )
@@ -14,11 +14,11 @@ type PrivateHandler interface {
 
 type PrivateTgHandler struct {
 	log     *logrus.Entry
-	useCase use_case.PrivateUseCase
+	usecase usecase.PrivateUsecase
 }
 
-func MakePrivateTgHandler(log *logrus.Entry, useCase use_case.PrivateUseCase) PrivateHandler {
-	return &PrivateTgHandler{log: log, useCase: useCase}
+func MakePrivateTgHandler(log *logrus.Entry, usecase usecase.PrivateUsecase) PrivateHandler {
+	return &PrivateTgHandler{log: log, usecase: usecase}
 }
 
 func (h *PrivateTgHandler) Info(c tele.Context) error {

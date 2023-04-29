@@ -4,7 +4,7 @@ import (
 	"collector-telegram-bot/config"
 	"collector-telegram-bot/internal/delivery"
 	repo "collector-telegram-bot/internal/repository"
-	"collector-telegram-bot/internal/useCase"
+	"collector-telegram-bot/internal/usecase"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/telebot.v3"
@@ -34,11 +34,11 @@ func (s *Server) Start() {
 
 	repository := repo.MakePgRepository(s.logger)
 
-	privateUseCase := use_case.MakePrivateUseCase(s.logger, repository)
-	groupUseCase := use_case.MakeGroupUseCase(s.logger, repository)
+	privateUsecase := usecase.MakePrivateUsecase(s.logger, repository)
+	groupUsecase := usecase.MakeGroupUsecase(s.logger, repository)
 
-	privateHandler := delivery.MakePrivateTgHandler(s.logger, privateUseCase)
-	groupHandler := delivery.MakeGroupTgHandler(s.logger, groupUseCase)
+	privateHandler := delivery.MakePrivateTgHandler(s.logger, privateUsecase)
+	groupHandler := delivery.MakeGroupTgHandler(s.logger, groupUsecase)
 
 	b.Handle("/start", privateHandler.Start)
 	b.Handle("/info", privateHandler.Info)
