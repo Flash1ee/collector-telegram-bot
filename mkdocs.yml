@@ -1,0 +1,53 @@
+site_name: collector-telegram-bot
+repo_url: https://github.com/Flash1ee/collector-telegram-bot
+repo_name: Flash1ee/collector-telegram-bot
+copyright: Copyright &copy; 2023
+nav:
+  - Главная: index.md
+theme:
+  name: material
+  language: ru
+  features:
+    - search.suggest # предлагает подсказки для поисковых запросов по мере ввода.
+    - search.highlight # выделяет найденные результаты поиска на странице.
+    - navigation.instant # обеспечивает мгновенную навигацию между разделами документа, без перезагрузки страницы.
+    - navigation.indexes # создает индекс разделов и создает навигацию по этим разделам.
+    - toc.follow # позволяет пользователям выбирать, какие элементы в содержании (TOC) имеют ссылки, по которым можно переходить.
+  palette:
+    - media: "(prefers-color-scheme)"
+      primary: teal
+      toggle:
+        icon: material/brightness-auto
+        name: Переключить на тёмную тему
+
+    - scheme: default
+      primary: grey
+      toggle:
+        icon: material/weather-sunny
+        name: Переключить на тему системы
+
+    - scheme: slate
+      primary: black
+      toggle:
+        icon: material/weather-night
+        name: Переключить на светлую тему
+  icon:
+    repo: fontawesome/brands/github-alt
+
+  favicon: icon/icon.png
+  logo: icon/icon.png
+
+markdown_extensions:
+  - admonition # добавляет блоки с предупреждениями, замечаниями и т.д.
+  - pymdownx.details # позволяет скрывать/раскрывать содержимое в блоках с помощью элемента <details>.
+  - pymdownx.superfences # добавляет возможность использовать расширенный синтаксис для блоков кода.
+  - pymdownx.tabbed: # позволяет создавать вкладки для различного содержимого, такого как код, текст и т.д.
+      alternate_style: true
+  - def_list # добавляет списки определений в Markdown.
+  - pymdownx.tasklist:
+      custom_checkbox: true #  добавляет возможность создания списков задач со встроенными чекбоксами. custom_checkbox: true - это опция, которая позволяет настраивать внешний вид чекбоксов.
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Flash1ee/collector-telegram-bot
+      name: github repository
