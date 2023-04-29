@@ -10,4 +10,4 @@ test:
 	go test -mod=vendor ./...
 
 clean:
-	rm -rf *.out *.exe *.html *.csvg
+	rm -rf *.out *.exe *.html *.csv
