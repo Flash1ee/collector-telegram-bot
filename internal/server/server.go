@@ -34,8 +34,8 @@ func (s *Server) Start() {
 
 	repository := repo.MakePgRepository(s.logger)
 
-	privateUseCase := useCase.MakePrivateUseCase(s.logger, repository)
-	groupUseCase := useCase.MakeGroupUseCase(s.logger, repository)
+	privateUseCase := use_case.MakePrivateUseCase(s.logger, repository)
+	groupUseCase := use_case.MakeGroupUseCase(s.logger, repository)
 
 	privateHandler := delivery.MakePrivateTgHandler(s.logger, privateUseCase)
 	groupHandler := delivery.MakeGroupTgHandler(s.logger, groupUseCase)

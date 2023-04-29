@@ -12,10 +12,10 @@ type GroupHandler interface {
 
 type GroupTgHandler struct {
 	log     *logrus.Entry
-	useCase useCase.GroupUseCase
+	useCase use_case.GroupUseCase
 }
 
-func MakeGroupTgHandler(log *logrus.Entry, useCase useCase.GroupUseCase) GroupHandler {
+func MakeGroupTgHandler(log *logrus.Entry, useCase use_case.GroupUseCase) GroupHandler {
 	return &GroupTgHandler{log: log, useCase: useCase}
 }
 
