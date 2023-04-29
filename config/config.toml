@@ -1,6 +1,6 @@
 [database]
-host = "postgres"
+host = "pg"
 port = "5432"
-database = "collector_db"
-user = "bob"
-password = "admin"
+database = "collector"
+user = "collector"
+password = "collector"
