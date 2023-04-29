@@ -4,10 +4,10 @@ run:
 	docker-compose up --build
 
 build:
-	go build -o app.out -v ./cmd/main.go
+	go build -mod=vendor -o app.out -v ./cmd/main.go
 
 test:
-	go test ./...
+	go test -mod=vendor ./...
 
 clean:
 	rm -rf *.out *.exe *.html *.csvg
