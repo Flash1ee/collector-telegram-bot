@@ -15,7 +15,7 @@ type GroupTgHandler struct {
 	usecase usecase.GroupUsecase
 }
 
-func MakeGroupTgHandler(log *logrus.Entry, usecase usecase.GroupUsecase) GroupHandler {
+func NewGroupTgHandler(log *logrus.Entry, usecase usecase.GroupUsecase) GroupHandler {
 	return &GroupTgHandler{log: log, usecase: usecase}
 }
 

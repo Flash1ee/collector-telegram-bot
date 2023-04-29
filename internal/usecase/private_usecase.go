@@ -15,7 +15,7 @@ type AppPrivateUsecase struct {
 	repo repo.Repository
 }
 
-func MakePrivateUsecase(log *logrus.Entry, repo repo.Repository) PrivateUsecase {
+func NewPrivateUsecase(log *logrus.Entry, repo repo.Repository) PrivateUsecase {
 	return &AppPrivateUsecase{log: log, repo: repo}
 }
 

@@ -1,12 +1,7 @@
 package config
 
 type ServerConfig struct {
-	ServerParams   ServerParams             `toml:"server"`
 	DatabaseParams PostgresConnectionParams `toml:"database"`
-}
-
-type ServerParams struct {
-	StartPort string
 }
 
 type PostgresConnectionParams struct {

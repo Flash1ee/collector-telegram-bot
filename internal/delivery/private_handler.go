@@ -17,7 +17,7 @@ type PrivateTgHandler struct {
 	usecase usecase.PrivateUsecase
 }
 
-func MakePrivateTgHandler(log *logrus.Entry, usecase usecase.PrivateUsecase) PrivateHandler {
+func NewPrivateTgHandler(log *logrus.Entry, usecase usecase.PrivateUsecase) PrivateHandler {
 	return &PrivateTgHandler{log: log, usecase: usecase}
 }
 

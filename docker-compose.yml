@@ -16,7 +16,7 @@ services:
     environment:
       POSTGRES_USER: bob
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: botppo
+      POSTGRES_DB: collector_db
     volumes:
       - ./db/01-database-init.up.sql:/docker-entrypoint-initdb.d/01-database-init.up.sql
       - ./db/02-constraints.up.sql:/docker-entrypoint-initdb.d/02-constraints.up.sql

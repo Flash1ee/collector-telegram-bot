@@ -34,11 +34,11 @@ func (s *Server) Start() {
 
 	repository := repo.MakePgRepository(s.logger)
 
-	privateUsecase := usecase.MakePrivateUsecase(s.logger, repository)
-	groupUsecase := usecase.MakeGroupUsecase(s.logger, repository)
+	privateUsecase := usecase.NewPrivateUsecase(s.logger, repository)
+	groupUsecase := usecase.NewGroupUsecase(s.logger, repository)
 
-	privateHandler := delivery.MakePrivateTgHandler(s.logger, privateUsecase)
-	groupHandler := delivery.MakeGroupTgHandler(s.logger, groupUsecase)
+	privateHandler := delivery.NewPrivateTgHandler(s.logger, privateUsecase)
+	groupHandler := delivery.NewGroupTgHandler(s.logger, groupUsecase)
 
 	b.Handle("/start", privateHandler.Start)
 	b.Handle("/info", privateHandler.Info)
