@@ -13,7 +13,7 @@ type AppGroupUsecase struct {
 	repo repo.Repository
 }
 
-func MakeGroupUsecase(log *logrus.Entry, repo repo.Repository) GroupUsecase {
+func NewGroupUsecase(log *logrus.Entry, repo repo.Repository) GroupUsecase {
 	return &AppGroupUsecase{log: log, repo: repo}
 }
 
