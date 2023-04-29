@@ -14,10 +14,10 @@ type PrivateHandler interface {
 
 type PrivateTgHandler struct {
 	log     *logrus.Entry
-	useCase useCase.PrivateUseCase
+	useCase use_case.PrivateUseCase
 }
 
-func MakePrivateTgHandler(log *logrus.Entry, useCase useCase.PrivateUseCase) PrivateHandler {
+func MakePrivateTgHandler(log *logrus.Entry, useCase use_case.PrivateUseCase) PrivateHandler {
 	return &PrivateTgHandler{log: log, useCase: useCase}
 }
 
