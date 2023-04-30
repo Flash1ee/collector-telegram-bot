@@ -54,7 +54,7 @@ func (uc *AppGroupUsecase) CreateSession(info dto.CreateSessionDTO) error {
 	return uc.repo.AddMemberToSession(curSession.UUID, userID)
 }
 
-func (uc *AppGroupUsecase) upsertUser(userID int64, username string) (int64, error) {
+func (uc *AppGroupUsecase) upsertUser(userID int64, username string) (uint64, error) {
 	user, err := uc.repo.GetUser(userID)
 
 	if err != nil {
@@ -113,7 +113,7 @@ func (uc *AppGroupUsecase) AddExpenseToSession(info dto.AddExpenseDTO) error {
 			return fmt.Errorf("usecase: %v", err.Error())
 		}
 		// Get UUID
-		member, _ = uc.repo.GetMemberBySession(session.UUID, info.UserID)
+		member, _ = uc.repo.GetMemberBySession(session.UUID, userID)
 		memberID = member.ID
 	}
 
