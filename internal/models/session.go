@@ -17,3 +17,7 @@ func NewSession(creatorID, chatID int64, sessionName string) *Session {
 		State:       "active",
 	}
 }
+
+func NewEmptySession() *Session {
+	return &Session{}
+}
