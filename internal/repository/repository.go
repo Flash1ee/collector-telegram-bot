@@ -20,9 +20,9 @@ type Repository interface {
 	GetUser(tgID int64) (*models.User, error)
 	CreateNewSession(session *models.Session) error
 	GetActiveSessionByChatID(chatID int64) (*models.Session, error)
-	AddMemberToSession(sessionUUID, userID int64) error
-	GetMemberBySession(sessionUUID int64, userID int64) (*models.Member, error)
-	AddUserCosts(memberID int64, money int, description string) error
+	AddMemberToSession(sessionUUID, userID uint64) error
+	GetMemberBySession(sessionUUID, userID uint64) (*models.Member, error)
+	AddUserCosts(memberID uint64, money int, description string) error
 }
 
 type PgRepository struct {
@@ -101,7 +101,7 @@ func (r *PgRepository) GetActiveSessionByChatID(chatID int64) (*models.Session, 
 	return session, err
 }
 
-func (r *PgRepository) AddMemberToSession(sessionUUID, userID int64) error {
+func (r *PgRepository) AddMemberToSession(sessionUUID, userID uint64) error {
 	queryString := fmt.Sprintf(`INSERT INTO`+" %s "+`
 		(session_id, user_id) VALUES 
 		($1, $2);`, MembersTable)
@@ -110,7 +110,7 @@ func (r *PgRepository) AddMemberToSession(sessionUUID, userID int64) error {
 	return err
 }
 
-func (r *PgRepository) GetMemberBySession(sessionUUID int64, userID int64) (*models.Member, error) {
+func (r *PgRepository) GetMemberBySession(sessionUUID, userID uint64) (*models.Member, error) {
 	var (
 		member = models.NewEmptyMember()
 		err    error
@@ -130,7 +130,7 @@ func (r *PgRepository) GetMemberBySession(sessionUUID int64, userID int64) (*mod
 	return member, err
 }
 
-func (r *PgRepository) AddUserCosts(memberID int64, money int, description string) error {
+func (r *PgRepository) AddUserCosts(memberID uint64, money int, description string) error {
 	queryString := fmt.Sprintf(`INSERT INTO`+" %s "+`
 		(member_id, money, description, created_at) VALUES 
 		($1, $2, $3, current_date);`, CostsTable)
