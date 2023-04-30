@@ -69,36 +69,32 @@ func (h *GroupTgHandler) AddExpense(c tele.Context) error {
 	)
 	h.log.Infof("Recieved message from %s, text = %s", c.Message().Sender.Username, c.Text())
 
-	chatID := c.Chat().ID
-	userID := c.Message().Sender.ID
-	username := c.Message().Sender.Username
-
 	if len(c.Args()) != 2 {
-		responseText = fmt.Sprintf("Please, create command with params /add <SessionName> <Cost>!")
-	} else {
-		productName := c.Args()[0]
-		cost, costErr := strconv.Atoi(c.Args()[1])
-		if costErr != nil {
-			responseText = fmt.Sprintf("Cost must be integer!")
-		} else {
-			info := dto.AddExpenseDTO{
-				ChatID:   chatID,
-				Product:  productName,
-				Cost:     cost,
-				UserID:   userID,
-				Username: username,
-			}
-			err = h.usecase.AddExpenseToSession(info)
-			switch err {
-			case usecase.SessionNotExistsErr:
-				responseText = fmt.Sprintf("You should start session!")
-			case nil:
-				responseText = fmt.Sprintf("Expense is added!")
-			default:
-				h.log.Warnf("Create session err: %v", err)
-				responseText = fmt.Sprintf("Sorry, internal problems")
-			}
-		}
+		return c.Send("Please, create command with params /add <SessionName> <Cost>!")
+	}
+
+	productName := c.Args()[0]
+	cost, costErr := strconv.Atoi(c.Args()[1])
+	if costErr != nil {
+		return c.Send("Cost must be integer!")
+	}
+	info := dto.AddExpenseDTO{
+		ChatID:   c.Chat().ID,
+		Product:  productName,
+		Cost:     cost,
+		UserID:   c.Message().Sender.ID,
+		Username: c.Message().Sender.Username,
+	}
+
+	err = h.usecase.AddExpenseToSession(info)
+	switch err {
+	case usecase.SessionNotExistsErr:
+		responseText = fmt.Sprintf("You should start session!")
+	case nil:
+		responseText = fmt.Sprintf("Expense is added!")
+	default:
+		h.log.Warnf("Create session err: %v", err)
+		responseText = fmt.Sprintf("Sorry, internal problems")
 	}
 	return c.Send(responseText)
 }
