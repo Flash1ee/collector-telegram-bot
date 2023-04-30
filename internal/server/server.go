@@ -48,6 +48,7 @@ func (s *Server) Start() {
 	b.Handle("/сессии", privateHandler.Sessions)
 	b.Handle("@collector_money_bot start", groupHandler.Great)
 	b.Handle("/start", groupHandler.StartSession)
+	b.Handle("/add", groupHandler.AddExpense)
 
 	s.logger.Info("Server is working")
 
