@@ -10,6 +10,8 @@ import (
 const (
 	UserTable    = "users"
 	SessionTable = "sessions"
+	MembersTable = "members"
+	CostsTable   = "costs"
 )
 
 type Repository interface {
@@ -17,6 +19,10 @@ type Repository interface {
 	CreateUser(user *models.User) error
 	GetUser(tgID int64) (*models.User, error)
 	CreateNewSession(session *models.Session) error
+	GetActiveSessionByChatID(chatID int64) (*models.Session, error)
+	AddMemberToSession(sessionUUID, userID int64) error
+	GetMemberBySession(sessionUUID int64, userID int64) (*models.Member, error)
+	AddUserCosts(memberID int64, money int, description string) error
 }
 
 type PgRepository struct {
@@ -43,7 +49,7 @@ func (r *PgRepository) GetUser(tgID int64) (*models.User, error) {
 	username, 
 	created_at, 
 	requisites
-	FROM`+" %s "+`WHERE tg_id = $1`, UserTable)
+	FROM`+" %s "+`WHERE tg_id = $1;`, UserTable)
 
 	rows, err := r.Conn.Query(queryString, tgID)
 	if err == nil {
@@ -69,5 +75,66 @@ func (r *PgRepository) CreateNewSession(session *models.Session) error {
 		($1, $2, $3, current_date, $4);`, SessionTable)
 
 	_, err := r.Conn.Exec(queryString, session.CreatorID, session.ChatID, session.SessionName, session.State)
+	return err
+}
+
+func (r *PgRepository) GetActiveSessionByChatID(chatID int64) (*models.Session, error) {
+	var (
+		session = models.NewEmptySession()
+		err     error
+	)
+	queryString := fmt.Sprintf(`SELECT 
+	uuid, 
+	creator_id, 
+	chat_id, 
+	session_name,
+	state
+	FROM`+" %s "+`WHERE chat_id = $1 AND state='active';`, SessionTable)
+
+	rows, err := r.Conn.Query(queryString, chatID)
+	if err == nil {
+		for rows.Next() {
+			err = rows.Scan(&session.UUID, &session.CreatorID, &session.ChatID, &session.SessionName,
+				&session.State)
+		}
+	}
+	return session, err
+}
+
+func (r *PgRepository) AddMemberToSession(sessionUUID, userID int64) error {
+	queryString := fmt.Sprintf(`INSERT INTO`+" %s "+`
+		(session_id, user_id) VALUES 
+		($1, $2);`, MembersTable)
+
+	_, err := r.Conn.Exec(queryString, sessionUUID, userID)
+	return err
+}
+
+func (r *PgRepository) GetMemberBySession(sessionUUID int64, userID int64) (*models.Member, error) {
+	var (
+		member = models.NewEmptyMember()
+		err    error
+	)
+	queryString := fmt.Sprintf(`SELECT 
+	id, 
+	session_id, 
+	user_id
+	FROM`+" %s "+`WHERE session_id = $1 AND user_id = $2;`, MembersTable)
+
+	rows, err := r.Conn.Query(queryString, sessionUUID, userID)
+	if err == nil {
+		for rows.Next() {
+			err = rows.Scan(&member.ID, &member.SessionUUID, &member.UserID)
+		}
+	}
+	return member, err
+}
+
+func (r *PgRepository) AddUserCosts(memberID int64, money int, description string) error {
+	queryString := fmt.Sprintf(`INSERT INTO`+" %s "+`
+		(member_id, money, description, created_at) VALUES 
+		($1, $2, $3, current_date);`, CostsTable)
+
+	_, err := r.Conn.Exec(queryString, memberID, money, description)
 	return err
 }
