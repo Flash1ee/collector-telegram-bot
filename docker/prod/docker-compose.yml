@@ -41,7 +41,8 @@ services:
     image: ivaaahn/collector-migrations:${APP_VERSION}
     container_name: migrations
     depends_on:
-      - pg
+      pg:
+        condition: service_healthy
     environment:
       USER: ${DB_USER}
       PSWD: ${DB_PSWD}
