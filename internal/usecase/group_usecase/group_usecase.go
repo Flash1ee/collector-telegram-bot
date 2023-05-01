@@ -115,3 +115,52 @@ func (uc *AppGroupUsecase) AddExpenseToSession(info dto.AddExpenseDTO) error {
 	// Add user costs
 	return uc.repo.AddUserCosts(memberID, info.Cost, info.Product)
 }
+
+func (uc *AppGroupUsecase) GetAllExpenses(info dto.GetCostsDTO) (map[string]models.AllUserCosts, error) {
+	// Get session by chat id
+	session, err := uc.repo.GetActiveSessionByChatID(info.ChatID)
+	if err != nil {
+		return nil, fmt.Errorf("usecase: %v", err.Error())
+	}
+
+	// If session not exist -- return error
+	if session.State != ActiveSession {
+		return nil, usecase.SessionNotExistsErr
+	}
+
+	costs, err := uc.repo.GetUsersCosts(session.UUID)
+	if err != nil {
+		return nil, fmt.Errorf("usecase: %v", err.Error())
+	}
+
+	var UsersCosts = map[string]models.AllUserCosts{}
+	for _, curCost := range costs {
+		username := curCost.Username
+		curRec := UsersCosts[username]
+		curRec.Sum += curCost.Cost
+
+		newUserCost := models.UserCost{
+			Money:       curCost.Cost,
+			Description: curCost.Description,
+		}
+
+		curRec.Costs = append(curRec.Costs, newUserCost)
+		UsersCosts[username] = curRec
+	}
+	return UsersCosts, nil
+}
+
+func (uc *AppGroupUsecase) FinishSession(info dto.FinishSessionDTO) error {
+	// Get session by chat id
+	session, err := uc.repo.GetActiveSessionByChatID(info.ChatID)
+	if err != nil {
+		return fmt.Errorf("usecase: %v", err.Error())
+	}
+
+	// If session not exist -- return error
+	if session.State != ActiveSession {
+		return usecase.SessionNotExistsErr
+	}
+
+	return uc.repo.FinishSession(session.UUID)
+}

@@ -51,6 +51,8 @@ func (s *Server) Start() {
 
 	b.Handle("/start", groupHandler.StartSession)
 	b.Handle("/add", groupHandler.AddExpense)
+	b.Handle("/count", groupHandler.GetCosts)
+	b.Handle("/finish", groupHandler.FinishSession)
 
 	s.logger.Info("Server is working")
 
