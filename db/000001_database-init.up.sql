@@ -13,6 +13,7 @@ create table sessions (
     uuid uuid not null,
     creator_id bigint not null,
     chat_id bigint not null,
+    session_name text not null,
     started_at date default current_timestamp not null,
     state session_state_t not null,
     primary key (uuid),
