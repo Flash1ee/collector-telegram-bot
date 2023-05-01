@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	BigSeparateString   = "===========\n"
-	SmallSeparateString = "----------\n"
+	bigSeparateString   = "===========\n"
+	smallSeparateString = "----------\n"
 )
 
 type GroupTgHandler struct {
@@ -56,7 +56,7 @@ func (h *GroupTgHandler) StartSession(c tele.Context) error {
 	err = h.usecase.CreateSession(info)
 	switch {
 	case err == usecase.SessionExistsErr:
-		return c.Send("Сессия уже существует, нельзя создать новую :(")
+		return c.Send("Сессия уже существует – новую создать нельзя. :(")
 	case err != nil:
 		h.log.Warnf("Create session err: %v", err)
 		return c.Send("Извини, технические проблемы")
@@ -93,12 +93,12 @@ func (h *GroupTgHandler) AddExpense(c tele.Context) error {
 	err = h.usecase.AddExpenseToSession(info)
 	switch err {
 	case usecase.SessionNotExistsErr:
-		responseText = fmt.Sprintf("Нужно начать новую сессию для выполнения команды!")
+		responseText = fmt.Sprintf("Сессия уже существует – новую создать нельзя!")
 	case nil:
 		responseText = fmt.Sprintf("Добавлена новая трата!")
 	default:
 		h.log.Warnf("Add expense err: %v", err)
-		responseText = fmt.Sprintf("Извини, технические проблемы :(")
+		responseText = "Извини, технические проблемы :("
 	}
 	return c.Send(responseText)
 }
@@ -114,7 +114,7 @@ func (h *GroupTgHandler) GetCosts(c tele.Context) error {
 	allCosts, err := h.usecase.GetAllExpenses(info)
 
 	if err == usecase.SessionNotExistsErr {
-		return c.Send("Нужно начать сессию для этой команды!")
+		return c.Send("Для выполнения этой команды нужно начать сессию!")
 	}
 
 	if err != nil {
@@ -126,7 +126,7 @@ func (h *GroupTgHandler) GetCosts(c tele.Context) error {
 		return c.Send("Трат пока еще не было :(")
 	}
 
-	responseText += "Все траты на текущий момент\n" + BigSeparateString
+	responseText += "Все траты на текущий момент\n" + bigSeparateString
 	responseText += h.createOutput(allCosts)
 
 	return c.Send(responseText)
@@ -136,7 +136,7 @@ func (h *GroupTgHandler) createOutput(allCosts map[string]models.AllUserCosts) s
 	var responseText string
 	for username, allUserCosts := range allCosts {
 		responseText += fmt.Sprintf("Пользователь @%s \n", username)
-		responseText += fmt.Sprintf("Общая сумма: %d рублей\n"+SmallSeparateString, allUserCosts.Sum)
+		responseText += fmt.Sprintf("Общая сумма: %d рублей\n"+smallSeparateString, allUserCosts.Sum)
 
 		// Sorting for pretty output
 		allUserCosts.SortByCost()
@@ -145,7 +145,7 @@ func (h *GroupTgHandler) createOutput(allCosts map[string]models.AllUserCosts) s
 			responseText += fmt.Sprintf("%s - %d рублей \n", cost.Description, cost.Money)
 		}
 
-		responseText += BigSeparateString
+		responseText += bigSeparateString
 	}
 	return responseText
 }
@@ -176,7 +176,7 @@ func (h *GroupTgHandler) FinishSession(c tele.Context) error {
 		return c.Send("Извини, технические проблемы")
 	}
 
-	responseText += "Сессия завершена! Итоговые траты: \n" + BigSeparateString
+	responseText += "Сессия завершена! Итоговые траты: \n" + bigSeparateString
 	responseText += h.createOutput(allCosts)
 
 	return c.Send(responseText)
