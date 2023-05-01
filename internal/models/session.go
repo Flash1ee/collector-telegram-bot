@@ -1,7 +1,11 @@
 package models
 
+import "github.com/google/uuid"
+
+const SessionActive = "active"
+
 type Session struct {
-	UUID        uint64
+	UUID        uuid.UUID
 	CreatorID   uint64
 	ChatID      int64
 	SessionName string
@@ -9,12 +13,13 @@ type Session struct {
 	State       string
 }
 
-func NewSession(creatorID uint64, chatID int64, sessionName string) *Session {
+func NewSession(UUID uuid.UUID, creatorID uint64, chatID int64, sessionName string) *Session {
 	return &Session{
+		UUID:        UUID,
 		CreatorID:   creatorID,
 		ChatID:      chatID,
 		SessionName: sessionName,
-		State:       "active",
+		State:       SessionActive,
 	}
 }
 
