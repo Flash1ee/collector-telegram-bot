@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  pg_test:
+    image: postgres:14-alpine
+    expose:
+      - 5432
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+
+  migrations_test:
+    build:
+      context: ../..
+      dockerfile: ./docker/test/Dockerfile
+    depends_on:
+      - pg_test
+    environment:
+      USER: test
+      PSWD: test
+      HOST: pg_test:5432
+      DB: test
+      WAIT_HOSTS: pg_test:5432
