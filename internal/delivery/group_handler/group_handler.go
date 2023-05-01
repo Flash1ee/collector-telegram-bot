@@ -1,26 +1,21 @@
-package delivery
+package group_handler
 
 import (
+	"collector-telegram-bot/internal"
 	"collector-telegram-bot/internal/dto"
 	"collector-telegram-bot/internal/usecase"
+	"collector-telegram-bot/internal/usecase/group_usecase"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	tele "gopkg.in/telebot.v3"
 	"strconv"
 )
 
-type GroupHandler interface {
-	Great(c tele.Context) error
-	StartSession(c tele.Context) error
-	AddExpense(c tele.Context) error
-}
-
 type GroupTgHandler struct {
-	log     *logrus.Entry
-	usecase usecase.GroupUsecase
+	log     internal.Logger
+	usecase group_usecase.GroupUsecase
 }
 
-func NewGroupTgHandler(log *logrus.Entry, usecase usecase.GroupUsecase) GroupHandler {
+func New(log internal.Logger, usecase group_usecase.GroupUsecase) GroupHandler {
 	return &GroupTgHandler{log: log, usecase: usecase}
 }
 
@@ -41,23 +36,26 @@ func (h *GroupTgHandler) StartSession(c tele.Context) error {
 	username := c.Message().Sender.Username
 
 	if len(c.Args()) == 0 {
-		responseText = fmt.Sprintf("Please, add session name after command!")
-	} else {
-		sessionName := c.Args()[0]
-		info := dto.CreateSessionDTO{
-			UserID:      userID,
-			ChatID:      chatID,
-			Username:    username,
-			SessionName: sessionName,
-		}
+		return c.Send("Please, add session name after command!")
+	}
 
-		err = h.usecase.CreateSession(info)
-		if err == nil {
-			responseText = fmt.Sprintf("Session %s successfully created!", sessionName)
-		} else {
-			h.log.Warnf("Create session err: %v", err)
-			responseText = fmt.Sprintf("Sorry, internal problems")
-		}
+	sessionName := c.Args()[0]
+	info := dto.CreateSessionDTO{
+		UserID:      userID,
+		ChatID:      chatID,
+		Username:    username,
+		SessionName: sessionName,
+	}
+
+	err = h.usecase.CreateSession(info)
+	switch {
+	case err == usecase.SessionExistsErr:
+		return c.Send("Session is exists now, you can't create new session :(")
+	case err != nil:
+		h.log.Warnf("Create session err: %v", err)
+		return c.Send("Sorry, internal problems")
+	default:
+		responseText = fmt.Sprintf("Session %s successfully created!", sessionName)
 	}
 	return c.Send(responseText)
 }
