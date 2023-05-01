@@ -1,11 +1,11 @@
-drop table if exists users cascade;
+drop table costs;
 
-drop table if exists sessions cascade;
+drop table debts;
 
-drop table if exists members cascade;
+drop table members;
 
-drop table if exists debts cascade;
+drop table sessions;
 
-drop table if exists costs cascade;
+drop table users;
 
-drop type if exists session_state_t cascade;
+drop type session_state_t;
