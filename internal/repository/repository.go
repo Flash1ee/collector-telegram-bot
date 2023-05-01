@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	UserTable    = "users"
-	SessionTable = "sessions"
-	MembersTable = "members"
-	CostsTable   = "costs"
+	UserTable     = "users"
+	SessionTable  = "sessions"
+	MembersTable  = "members"
+	CostsTable    = "costs"
+	ClosedSession = "closed"
 )
 
 type Repository interface {
@@ -23,6 +24,8 @@ type Repository interface {
 	AddMemberToSession(sessionUUID internal.UUID, userID uint64) (uint64, error)
 	GetMemberBySession(sessionUUID internal.UUID, userID uint64) (*models.Member, error)
 	AddUserCosts(memberID uint64, money int, description string) error
+	GetUsersCosts(sessionUUID internal.UUID) ([]*models.Expanse, error)
+	FinishSession(sessionUUID internal.UUID) error
 }
 
 type PgRepository struct {
@@ -64,7 +67,7 @@ func (r *PgRepository) CreateUser(user *models.User) (uint64, error) {
 	var id uint64
 	queryString := fmt.Sprintf(`INSERT INTO`+" %s "+`
 		(tg_id, username, created_at, requisites) VALUES 
-		($1, $2, current_date, $3) returning id;`, UserTable)
+		($1, $2, current_timestamp, $3) returning id;`, UserTable)
 
 	row := r.Conn.QueryRow(queryString, user.TgID, user.Username, user.Requisites)
 	err := row.Scan(&id)
@@ -74,7 +77,7 @@ func (r *PgRepository) CreateUser(user *models.User) (uint64, error) {
 func (r *PgRepository) CreateNewSession(session *models.Session) error {
 	queryString := fmt.Sprintf(`INSERT INTO`+" %s "+`
 		(uuid, creator_id, chat_id, session_name, started_at, state) VALUES 
-		($1, $2, $3, $4, current_date, $5);`, SessionTable)
+		($1, $2, $3, $4, current_timestamp, $5);`, SessionTable)
 
 	_, err := r.Conn.Exec(queryString, session.UUID, session.CreatorID, session.ChatID,
 		session.SessionName, session.State)
@@ -138,8 +141,37 @@ func (r *PgRepository) GetMemberBySession(sessionUUID internal.UUID, userID uint
 func (r *PgRepository) AddUserCosts(memberID uint64, money int, description string) error {
 	queryString := fmt.Sprintf(`INSERT INTO`+" %s "+`
 		(member_id, money, description, created_at) VALUES 
-		($1, $2, $3, current_date);`, CostsTable)
+		($1, $2, $3, current_timestamp);`, CostsTable)
 
 	_, err := r.Conn.Exec(queryString, memberID, money, description)
+	return err
+}
+
+func (r *PgRepository) GetUsersCosts(sessionUUID internal.UUID) ([]*models.Expanse, error) {
+	result := make([]*models.Expanse, 0)
+
+	queryString := fmt.Sprintf(`SELECT U.username, C.money, C.description 
+	FROM`+" %s "+`as M JOIN `+" %s "+`as C on M.id = C.member_id
+		JOIN`+" %s "+`as U on M.user_id = U.id
+	WHERE M.session_id = $1`, MembersTable, CostsTable, UserTable)
+
+	rows, err := r.Conn.Query(queryString, sessionUUID)
+	if err == nil {
+		for rows.Next() {
+			var tmpExpenses = &models.Expanse{}
+			err = rows.Scan(&tmpExpenses.Username, &tmpExpenses.Cost, &tmpExpenses.Description)
+			if err == nil {
+				result = append(result, tmpExpenses)
+			}
+		}
+	}
+
+	return result, err
+}
+
+func (r *PgRepository) FinishSession(sessionUUID internal.UUID) error {
+	queryString := fmt.Sprintf(`UPDATE`+" %s "+`SET state = $1 WHERE uuid = $2`, SessionTable)
+
+	_, err := r.Conn.Exec(queryString, ClosedSession, sessionUUID)
 	return err
 }
