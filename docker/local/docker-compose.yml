@@ -6,13 +6,15 @@ services:
     build:
       context: ../..
       dockerfile: ./docker/base/Dockerfile
-    depends_on:
-      - pg
-      - migrations
     restart: unless-stopped
     command:
       - "-t"
       - ${BOT_TOKEN}
+    depends_on:
+      pg:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
 
   pg:
     container_name: pg
@@ -29,6 +31,11 @@ services:
     volumes:
       - pg_data_volume:/data/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: pg_isready --dbname=$DB_NAME --username=$DB_USER
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   migrations:
     build:
@@ -36,13 +43,13 @@ services:
       dockerfile: ./docker/base/Dockerfile.migrations
     container_name: migrations
     depends_on:
-      - pg
+      pg:
+        condition: service_healthy
     environment:
       USER: ${DB_USER}
       PSWD: ${DB_PSWD}
       HOST: pg:5432
       DB: ${DB_NAME}
-      WAIT_HOSTS: pg:5432
 
 volumes:
   pg_data_volume:

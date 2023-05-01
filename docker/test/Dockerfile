@@ -1,10 +1,7 @@
 FROM migrate/migrate
 
-ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait.sh
 COPY ./db /db
 
 ENTRYPOINT []
-CMD chmod +x /wait.sh \
-        && /wait.sh \
-        && migrate -path '/db' -database postgres://$USER:$PSWD@$HOST/$DB?sslmode=disable up \
-        && echo "y" | migrate -path '/db' -database postgres://$USER:$PSWD@$HOST/$DB?sslmode=disable down
+CMD migrate -path '/db' -database postgres://$USER:$PSWD@$HOST/$DB?sslmode=disable up \
+    && echo "y" | migrate -path '/db' -database postgres://$USER:$PSWD@$HOST/$DB?sslmode=disable down
