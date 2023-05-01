@@ -1,13 +1,13 @@
 create type session_state_t as enum ('active', 'closed');
 
-create table users (
-    id bigserial not null,
-    tg_id bigint not null,
-    username text not null,
-    created_at date default current_timestamp not null,
-    requisites text not null,
-    primary key (id)
-);
+-- create table users (
+--     id bigserial not null,
+--     tg_id bigint not null,
+--     username text not null,
+--     created_at date default current_timestamp not null,
+--     requisites text not null,
+--     primary key (id)
+-- );
 
 create table sessions (
     uuid uuid not null,
