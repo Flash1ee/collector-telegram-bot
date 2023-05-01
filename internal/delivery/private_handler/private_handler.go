@@ -6,12 +6,6 @@ import (
 	tele "gopkg.in/telebot.v3"
 )
 
-type PrivateHandler interface {
-	Info(c tele.Context) error
-	Start(c tele.Context) error
-	Sessions(c tele.Context) error
-}
-
 type PrivateTgHandler struct {
 	log     *logrus.Entry
 	usecase usecase.PrivateUsecase
