@@ -1,6 +1,10 @@
-create type session_state_t as enum ('active', 'closed');
+do $$ begin
+    create type session_state_t as enum ('active', 'closed');
+exception
+    when duplicate_object then null;
+end $$;
 
-create table users (
+create table if not exists users (
     id bigserial not null,
     tg_id bigint not null,
     username text not null,
@@ -9,7 +13,7 @@ create table users (
     primary key (id)
 );
 
-create table sessions (
+create table if not exists sessions (
     uuid uuid not null,
     creator_id bigint not null,
     chat_id bigint not null,
@@ -19,7 +23,7 @@ create table sessions (
     foreign key (creator_id) references users (id) on delete cascade
 );
 
-create table members (
+create table if not exists members (
     id bigserial not null,
     session_id uuid not null,
     user_id bigint not null,
@@ -28,7 +32,7 @@ create table members (
     foreign key (session_id) references sessions (uuid) on delete cascade
 );
 
-create table debts (
+create table if not exists debts (
     id bigserial not null,
     creditor_id bigint not null,
     debtor_id bigint not null,
@@ -39,11 +43,14 @@ create table debts (
 );
 
 alter table
+    debts drop constraint if exists "debts_money_check";
+
+alter table
     debts
 add
     constraint "debts_money_check" check (money > 0);
 
-create table costs (
+create table if not exists costs (
     id bigserial not null,
     member_id bigint not null,
     money real not null,
@@ -53,6 +60,9 @@ create table costs (
     foreign key (member_id) references members (id) on delete cascade
 );
 
+alter table
+    costs drop constraint if exists "costs_money_check";
+    
 alter table
     costs
 add

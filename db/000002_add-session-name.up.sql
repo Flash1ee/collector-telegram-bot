@@ -1,4 +1,4 @@
 alter table
     sessions
 add
-    column session_name text default 'empty' not null;
+    column if not exists session_name text default 'empty' not null;
