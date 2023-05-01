@@ -1,23 +1,17 @@
-package delivery
+package private_handler
 
 import (
-	"collector-telegram-bot/internal/usecase"
-	"github.com/sirupsen/logrus"
+	"collector-telegram-bot/internal"
+	"collector-telegram-bot/internal/usecase/private_usecase"
 	tele "gopkg.in/telebot.v3"
 )
 
-type PrivateHandler interface {
-	Info(c tele.Context) error
-	Start(c tele.Context) error
-	Sessions(c tele.Context) error
-}
-
 type PrivateTgHandler struct {
-	log     *logrus.Entry
-	usecase usecase.PrivateUsecase
+	log     internal.Logger
+	usecase private_usecase.PrivateUsecase
 }
 
-func NewPrivateTgHandler(log *logrus.Entry, usecase usecase.PrivateUsecase) PrivateHandler {
+func New(log internal.Logger, usecase private_usecase.PrivateUsecase) PrivateHandler {
 	return &PrivateTgHandler{log: log, usecase: usecase}
 }
 

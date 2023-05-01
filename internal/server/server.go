@@ -2,10 +2,14 @@ package server
 
 import (
 	"collector-telegram-bot/config"
-	"collector-telegram-bot/internal/delivery"
+	"collector-telegram-bot/internal/delivery/group_handler"
+	"collector-telegram-bot/internal/delivery/private_handler"
+	"collector-telegram-bot/internal/models"
 	repo "collector-telegram-bot/internal/repository"
-	"collector-telegram-bot/internal/usecase"
+	"collector-telegram-bot/internal/usecase/group_usecase"
+	"collector-telegram-bot/internal/usecase/private_usecase"
 	"fmt"
+	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/telebot.v3"
 	"time"
@@ -32,18 +36,21 @@ func (s *Server) Start() {
 		s.logger.Fatalf("Server error: %s", fmt.Sprintf("%v", err))
 	}
 
-	repository := repo.MakePgRepository(s.logger)
+	connection := models.NewPgSQLConnection(s.config.DatabaseParams)
 
-	privateUsecase := usecase.NewPrivateUsecase(s.logger, repository)
-	groupUsecase := usecase.NewGroupUsecase(s.logger, repository)
+	repository := repo.NewPgRepository(s.logger, connection)
 
-	privateHandler := delivery.NewPrivateTgHandler(s.logger, privateUsecase)
-	groupHandler := delivery.NewGroupTgHandler(s.logger, groupUsecase)
+	privateUsecase := private_usecase.New(s.logger, repository)
+	groupUsecase := group_usecase.New(s.logger, repository)
 
-	b.Handle("/start", privateHandler.Start)
+	privateHandler := private_handler.New(s.logger, privateUsecase)
+	groupHandler := group_handler.New(s.logger, groupUsecase)
+
 	b.Handle("/info", privateHandler.Info)
 	b.Handle("/сессии", privateHandler.Sessions)
-	b.Handle("@collector_money_bot start", groupHandler.Great)
+
+	b.Handle("/start", groupHandler.StartSession)
+	b.Handle("/add", groupHandler.AddExpense)
 
 	s.logger.Info("Server is working")
 
