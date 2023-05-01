@@ -9,16 +9,21 @@ services:
       POSTGRES_USER: test
       POSTGRES_PASSWORD: test
       POSTGRES_DB: test
+    healthcheck:
+      test: pg_isready --dbname=test --username=test
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   migrations_test:
     build:
       context: ../..
       dockerfile: ./docker/test/Dockerfile
-    depends_on:
-      - pg_test
     environment:
       USER: test
       PSWD: test
       HOST: pg_test:5432
       DB: test
-      WAIT_HOSTS: pg_test:5432
+    depends_on:
+      pg_test:
+        condition: service_healthy

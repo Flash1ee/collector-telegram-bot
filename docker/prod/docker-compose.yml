@@ -4,13 +4,16 @@ services:
   app:
     image: ivaaahn/collector-server:${APP_VERSION}
     container_name: app
-    depends_on:
-      - pg
-      - migrations
     restart: unless-stopped
     command:
       - "-t"
       - ${BOT_TOKEN}
+    depends_on:
+      pg:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+
 
   pg:
     image: postgres:14-alpine
@@ -27,6 +30,12 @@ services:
     volumes:
       - pg_data_volume:/data/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: pg_isready --dbname=$DB_NAME --username=$DB_USER
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 
   migrations:
     image: ivaaahn/collector-migrations:${APP_VERSION}
@@ -38,7 +47,6 @@ services:
       PSWD: ${DB_PSWD}
       HOST: pg:5432
       DB: ${DB_NAME}
-      WAIT_HOSTS: pg:5432
 
 volumes:
   pg_data_volume:
