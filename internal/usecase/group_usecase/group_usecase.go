@@ -7,6 +7,7 @@ import (
 	repo "collector-telegram-bot/internal/repository"
 	"collector-telegram-bot/internal/usecase"
 	"fmt"
+
 	"github.com/google/uuid"
 )
 
@@ -163,4 +164,112 @@ func (uc *AppGroupUsecase) FinishSession(info dto.FinishSessionDTO) error {
 	}
 
 	return uc.repo.FinishSession(session.UUID)
+}
+
+type DebtsMtr map[uint64]map[uint64]int
+
+func (uc *AppGroupUsecase) formDebtMtr(sessionUUID uuid.UUID) (DebtsMtr, error) {
+	allUsers, err := uc.repo.GetAllUsers(sessionUUID)
+	if err != nil {
+		return nil, fmt.Errorf("usecase: %v", err.Error())
+	}
+
+	var debtsMtr = make(DebtsMtr)
+	for _, currUser := range allUsers {
+		currDebtor := make(map[uint64]int)
+		for _, tmpUser := range allUsers {
+			currDebtor[tmpUser.ID] = 0
+		}
+		debtsMtr[currUser.ID] = currDebtor
+	}
+
+	for curUser, curDebtors := range debtsMtr {
+		for curDebtor, curDebt := range curDebtors {
+			uc.log.Infof("CurUser=%d CurDebtor=%d CurDebt=%d\n", curUser, curDebtor, curDebt)
+		}
+	}
+
+	allCosts, err := uc.repo.GetAllCosts(sessionUUID)
+	if err != nil {
+		return nil, fmt.Errorf("usecase: %v", err.Error())
+	}
+
+	for _, curCost := range allCosts {
+		userID := curCost.UserID
+		debt := curCost.Money / len(allUsers)
+		curDebtors := debtsMtr[userID]
+		uc.log.Infof("UserID=%dMoney=%dDebt=%d", userID, curCost.Money, debt)
+		for curDebtor := range curDebtors {
+			uc.log.Infof("UserID=%dCurDebtor=%d", userID, curDebtor)
+			if curDebtor != userID {
+				debtsMtr[userID][curDebtor] += debt
+			}
+		}
+	}
+
+	for curUser, curDebtors := range debtsMtr {
+		for curDebtor, curDebt := range curDebtors {
+			uc.log.Infof("CurUser=%d CurDebtor=%d CurDebt=%d\n", curUser, curDebtor, curDebt)
+		}
+	}
+
+	for curUser, curDebtors := range debtsMtr {
+		for curDebtor := range curDebtors {
+			if debtsMtr[curUser][curDebtor] != 0 && debtsMtr[curDebtor][curUser] != 0 {
+				if debtsMtr[curUser][curDebtor] > debtsMtr[curDebtor][curUser] {
+					debtsMtr[curUser][curDebtor] -= debtsMtr[curDebtor][curUser]
+					debtsMtr[curDebtor][curUser] = 0
+				} else {
+					debtsMtr[curDebtor][curUser] -= debtsMtr[curUser][curDebtor]
+					debtsMtr[curUser][curDebtor] = 0
+				}
+			}
+		}
+	}
+
+	for curUser, curDebtors := range debtsMtr {
+		for curDebtor, curDebt := range curDebtors {
+			uc.log.Infof("CurUser=%d CurDebtor=%d CurDebt=%d\n", curUser, curDebtor, curDebt)
+		}
+	}
+	return debtsMtr, nil
+}
+
+func (uc *AppGroupUsecase) GetAllDebts(info dto.GetDebtsDTO) (map[string]models.AllUserDebts, error) {
+	// Get session by chat id
+	session, err := uc.repo.GetActiveSessionByChatID(info.ChatID)
+	if err != nil {
+		return nil, fmt.Errorf("usecase: %v", err.Error())
+	}
+
+	// If session not exist -- return error
+	if session.State != ActiveSession {
+		return nil, usecase.SessionNotExistsErr
+	}
+
+	debtsMtr, err := uc.formDebtMtr(session.UUID)
+	if err != nil {
+		return nil, err
+	}
+
+	UserDebts := map[string]models.AllUserDebts{}
+	for curUser, curDebtors := range debtsMtr {
+		for curDebtor := range curDebtors {
+			if debtsMtr[curUser][curDebtor] != 0 {
+				creditor, _ := uc.repo.GetUserById(curUser)
+				debtor, _ := uc.repo.GetUserById(curDebtor)
+				debt := debtsMtr[curUser][curDebtor]
+
+				curUserDebts := UserDebts[creditor.Username]
+				newUserDebt := models.UserDebt{
+					DebtorName: debtor.Username,
+					Money:      debt,
+				}
+				curUserDebts.Debts = append(curUserDebts.Debts, newUserDebt)
+				UserDebts[creditor.Username] = curUserDebts
+			}
+		}
+	}
+
+	return UserDebts, nil
 }
