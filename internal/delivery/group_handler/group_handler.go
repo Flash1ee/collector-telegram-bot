@@ -192,7 +192,7 @@ func (h *GroupTgHandler) createOutputDebts(allDebts map[string]models.AllUserDeb
 		allUserDebts.SortByDebt()
 
 		for _, cost := range allUserDebts.Debts {
-			responseText += fmt.Sprintf("%s - %d рублей \n", cost.DebtorName, cost.Money)
+			responseText += fmt.Sprintf("@%s - %d рублей \n", cost.DebtorName, cost.Money)
 		}
 
 		responseText += bigSeparateString
