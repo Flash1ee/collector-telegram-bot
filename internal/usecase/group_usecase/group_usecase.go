@@ -183,12 +183,6 @@ func (uc *AppGroupUsecase) formDebtMtr(sessionUUID uuid.UUID) (DebtsMtr, error) 
 		debtsMtr[currUser.ID] = currDebtor
 	}
 
-	for curUser, curDebtors := range debtsMtr {
-		for curDebtor, curDebt := range curDebtors {
-			uc.log.Infof("CurUser=%d CurDebtor=%d CurDebt=%d\n", curUser, curDebtor, curDebt)
-		}
-	}
-
 	allCosts, err := uc.repo.GetAllCosts(sessionUUID)
 	if err != nil {
 		return nil, fmt.Errorf("usecase: %v", err.Error())
@@ -198,18 +192,10 @@ func (uc *AppGroupUsecase) formDebtMtr(sessionUUID uuid.UUID) (DebtsMtr, error) 
 		userID := curCost.UserID
 		debt := curCost.Money / len(allUsers)
 		curDebtors := debtsMtr[userID]
-		uc.log.Infof("UserID=%dMoney=%dDebt=%d", userID, curCost.Money, debt)
 		for curDebtor := range curDebtors {
-			uc.log.Infof("UserID=%dCurDebtor=%d", userID, curDebtor)
 			if curDebtor != userID {
 				debtsMtr[userID][curDebtor] += debt
 			}
-		}
-	}
-
-	for curUser, curDebtors := range debtsMtr {
-		for curDebtor, curDebt := range curDebtors {
-			uc.log.Infof("CurUser=%d CurDebtor=%d CurDebt=%d\n", curUser, curDebtor, curDebt)
 		}
 	}
 
@@ -224,12 +210,6 @@ func (uc *AppGroupUsecase) formDebtMtr(sessionUUID uuid.UUID) (DebtsMtr, error) 
 					debtsMtr[curUser][curDebtor] = 0
 				}
 			}
-		}
-	}
-
-	for curUser, curDebtors := range debtsMtr {
-		for curDebtor, curDebt := range curDebtors {
-			uc.log.Infof("CurUser=%d CurDebtor=%d CurDebt=%d\n", curUser, curDebtor, curDebt)
 		}
 	}
 	return debtsMtr, nil
