@@ -46,8 +46,16 @@ markdown_extensions:
   - def_list # добавляет списки определений в Markdown.
   - pymdownx.tasklist:
       custom_checkbox: true #  добавляет возможность создания списков задач со встроенными чекбоксами. custom_checkbox: true - это опция, которая позволяет настраивать внешний вид чекбоксов.
+  - pymdownx.arithmatex:
+      generic: true
 extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/Flash1ee/collector-telegram-bot
       name: github repository
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
