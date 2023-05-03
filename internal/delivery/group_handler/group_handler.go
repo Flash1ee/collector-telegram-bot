@@ -1,13 +1,14 @@
 package group_handler
 
 import (
+	"fmt"
+	"strconv"
+
 	"collector-telegram-bot/internal"
 	"collector-telegram-bot/internal/dto"
 	"collector-telegram-bot/internal/models"
 	"collector-telegram-bot/internal/usecase"
 	"collector-telegram-bot/internal/usecase/group_usecase"
-	"fmt"
-	"strconv"
 
 	tele "gopkg.in/telebot.v3"
 )
@@ -220,7 +221,7 @@ func (h *GroupTgHandler) GetDebts(c tele.Context) error {
 	}
 
 	if len(allDebts) == 0 {
-		return c.Send("Трат пока еще не было :(")
+		return c.Send("Долгов нет")
 	}
 
 	responseText += "Все долги на текущий момент\n" + bigSeparateString
