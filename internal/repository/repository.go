@@ -202,14 +202,18 @@ func (r *PgRepository) GetAllCosts(sessionUUID internal.UUID) ([]*models.Cost, e
 	WHERE M.session_id = $1`, MembersTable, CostsTable)
 
 	rows, err := r.Conn.Query(queryString, sessionUUID)
-	if err == nil {
-		for rows.Next() {
-			var tmpCosts = &models.Cost{}
-			err = rows.Scan(&tmpCosts.UserID, &tmpCosts.Money)
-			if err == nil {
-				result = append(result, tmpCosts)
-			}
+
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var tmpCosts = &models.Cost{}
+		err = rows.Scan(&tmpCosts.UserID, &tmpCosts.Money)
+		if err != nil {
+			return nil, err
 		}
+		result = append(result, tmpCosts)
 	}
 
 	return result, err
@@ -229,14 +233,18 @@ func (r *PgRepository) GetAllUsers(sessionUUID internal.UUID) ([]*models.User, e
 	from`+" %s "+`as U join`+" %s "+`as M on U.id = M.user_id where M.session_id = $1`, UserTable, MembersTable)
 
 	rows, err := r.Conn.Query(queryString, sessionUUID)
-	if err == nil {
-		for rows.Next() {
-			var tmpUser = &models.User{}
-			err = rows.Scan(&tmpUser.ID, &tmpUser.TgID, &tmpUser.Username, &tmpUser.CreatedAt, &tmpUser.Requisites)
-			if err == nil {
-				result = append(result, tmpUser)
-			}
+
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var tmpUser = &models.User{}
+		err = rows.Scan(&tmpUser.ID, &tmpUser.TgID, &tmpUser.Username, &tmpUser.CreatedAt, &tmpUser.Requisites)
+		if err != nil {
+			return nil, err
 		}
+		result = append(result, tmpUser)
 	}
 	return result, err
 }

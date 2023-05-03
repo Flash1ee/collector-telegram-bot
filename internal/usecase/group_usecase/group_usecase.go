@@ -175,12 +175,12 @@ func (uc *AppGroupUsecase) formDebtMtr(sessionUUID uuid.UUID) (DebtsMtr, error) 
 	}
 
 	var debtsMtr = make(DebtsMtr)
-	for _, currUser := range allUsers {
-		currDebtor := make(map[uint64]int)
+	for _, curUser := range allUsers {
+		curDebtor := make(map[uint64]int)
 		for _, tmpUser := range allUsers {
-			currDebtor[tmpUser.ID] = 0
+			curDebtor[tmpUser.ID] = 0
 		}
-		debtsMtr[currUser.ID] = currDebtor
+		debtsMtr[curUser.ID] = curDebtor
 	}
 
 	allCosts, err := uc.repo.GetAllCosts(sessionUUID)
@@ -216,13 +216,11 @@ func (uc *AppGroupUsecase) formDebtMtr(sessionUUID uuid.UUID) (DebtsMtr, error) 
 }
 
 func (uc *AppGroupUsecase) GetAllDebts(info dto.GetDebtsDTO) (map[string]models.AllUserDebts, error) {
-	// Get session by chat id
 	session, err := uc.repo.GetActiveSessionByChatID(info.ChatID)
 	if err != nil {
 		return nil, fmt.Errorf("usecase: %v", err.Error())
 	}
 
-	// If session not exist -- return error
 	if session.State != ActiveSession {
 		return nil, usecase.SessionNotExistsErr
 	}
