@@ -4,6 +4,8 @@ repo_name: Flash1ee/collector-telegram-bot
 copyright: Copyright &copy; 2023
 nav:
   - Главная: index.md
+  - Алгоритм подсчета долгов: algorithm.md
+  - Быстрый старт: start.md
 theme:
   name: material
   language: ru
