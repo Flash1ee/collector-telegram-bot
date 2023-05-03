@@ -7,6 +7,7 @@ import (
 	repo "collector-telegram-bot/internal/repository"
 	"collector-telegram-bot/internal/usecase"
 	"fmt"
+
 	"github.com/google/uuid"
 )
 
@@ -114,4 +115,139 @@ func (uc *AppGroupUsecase) AddExpenseToSession(info dto.AddExpenseDTO) error {
 
 	// Add user costs
 	return uc.repo.AddUserCosts(memberID, info.Cost, info.Product)
+}
+
+func (uc *AppGroupUsecase) GetAllExpenses(info dto.GetCostsDTO) (map[string]models.AllUserCosts, error) {
+	// Get session by chat id
+	session, err := uc.repo.GetActiveSessionByChatID(info.ChatID)
+	if err != nil {
+		return nil, fmt.Errorf("usecase: %v", err.Error())
+	}
+
+	// If session not exist -- return error
+	if session.State != ActiveSession {
+		return nil, usecase.SessionNotExistsErr
+	}
+
+	costs, err := uc.repo.GetUsersCosts(session.UUID)
+	if err != nil {
+		return nil, fmt.Errorf("usecase: %v", err.Error())
+	}
+
+	var UsersCosts = map[string]models.AllUserCosts{}
+	for _, curCost := range costs {
+		username := curCost.Username
+		curRec := UsersCosts[username]
+		curRec.Sum += curCost.Cost
+
+		newUserCost := models.UserCost{
+			Money:       curCost.Cost,
+			Description: curCost.Description,
+		}
+
+		curRec.Costs = append(curRec.Costs, newUserCost)
+		UsersCosts[username] = curRec
+	}
+	return UsersCosts, nil
+}
+
+func (uc *AppGroupUsecase) FinishSession(info dto.FinishSessionDTO) error {
+	// Get session by chat id
+	session, err := uc.repo.GetActiveSessionByChatID(info.ChatID)
+	if err != nil {
+		return fmt.Errorf("usecase: %v", err.Error())
+	}
+
+	// If session not exist -- return error
+	if session.State != ActiveSession {
+		return usecase.SessionNotExistsErr
+	}
+
+	return uc.repo.FinishSession(session.UUID)
+}
+
+type DebtsMtr map[uint64]map[uint64]int
+
+func (uc *AppGroupUsecase) formDebtMtr(sessionUUID uuid.UUID) (DebtsMtr, error) {
+	allUsers, err := uc.repo.GetAllUsers(sessionUUID)
+	if err != nil {
+		return nil, fmt.Errorf("usecase: %v", err.Error())
+	}
+
+	var debtsMtr = make(DebtsMtr)
+	for _, curUser := range allUsers {
+		curDebtor := make(map[uint64]int)
+		for _, tmpUser := range allUsers {
+			curDebtor[tmpUser.ID] = 0
+		}
+		debtsMtr[curUser.ID] = curDebtor
+	}
+
+	allCosts, err := uc.repo.GetAllCosts(sessionUUID)
+	if err != nil {
+		return nil, fmt.Errorf("usecase: %v", err.Error())
+	}
+
+	for _, curCost := range allCosts {
+		userID := curCost.UserID
+		debt := curCost.Money / len(allUsers)
+		curDebtors := debtsMtr[userID]
+		for curDebtor := range curDebtors {
+			if curDebtor != userID {
+				debtsMtr[userID][curDebtor] += debt
+			}
+		}
+	}
+
+	for curUser, curDebtors := range debtsMtr {
+		for curDebtor := range curDebtors {
+			if debtsMtr[curUser][curDebtor] != 0 && debtsMtr[curDebtor][curUser] != 0 {
+				if debtsMtr[curUser][curDebtor] > debtsMtr[curDebtor][curUser] {
+					debtsMtr[curUser][curDebtor] -= debtsMtr[curDebtor][curUser]
+					debtsMtr[curDebtor][curUser] = 0
+				} else {
+					debtsMtr[curDebtor][curUser] -= debtsMtr[curUser][curDebtor]
+					debtsMtr[curUser][curDebtor] = 0
+				}
+			}
+		}
+	}
+	return debtsMtr, nil
+}
+
+func (uc *AppGroupUsecase) GetAllDebts(info dto.GetDebtsDTO) (map[string]models.AllUserDebts, error) {
+	session, err := uc.repo.GetActiveSessionByChatID(info.ChatID)
+	if err != nil {
+		return nil, fmt.Errorf("usecase: %v", err.Error())
+	}
+
+	if session.State != ActiveSession {
+		return nil, usecase.SessionNotExistsErr
+	}
+
+	debtsMtr, err := uc.formDebtMtr(session.UUID)
+	if err != nil {
+		return nil, err
+	}
+
+	UserDebts := map[string]models.AllUserDebts{}
+	for curUser, curDebtors := range debtsMtr {
+		for curDebtor := range curDebtors {
+			if debtsMtr[curUser][curDebtor] != 0 {
+				creditor, _ := uc.repo.GetUserById(curUser)
+				debtor, _ := uc.repo.GetUserById(curDebtor)
+				debt := debtsMtr[curUser][curDebtor]
+
+				curUserDebts := UserDebts[creditor.Username]
+				newUserDebt := models.UserDebt{
+					DebtorName: debtor.Username,
+					Money:      debt,
+				}
+				curUserDebts.Debts = append(curUserDebts.Debts, newUserDebt)
+				UserDebts[creditor.Username] = curUserDebts
+			}
+		}
+	}
+
+	return UserDebts, nil
 }
