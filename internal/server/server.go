@@ -9,10 +9,11 @@ import (
 	"collector-telegram-bot/internal/usecase/group_usecase"
 	"collector-telegram-bot/internal/usecase/private_usecase"
 	"fmt"
+	"time"
+
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/telebot.v3"
-	"time"
 )
 
 type Server struct {
@@ -51,6 +52,9 @@ func (s *Server) Start() {
 
 	b.Handle("/start", groupHandler.StartSession)
 	b.Handle("/add", groupHandler.AddExpense)
+	b.Handle("/debts", groupHandler.GetDebts)
+	b.Handle("/count", groupHandler.GetCosts)
+	b.Handle("/finish", groupHandler.FinishSession)
 
 	s.logger.Info("Server is working")
 
