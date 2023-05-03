@@ -7,8 +7,9 @@ import (
 	"collector-telegram-bot/internal/usecase"
 	"collector-telegram-bot/internal/usecase/group_usecase"
 	"fmt"
-	tele "gopkg.in/telebot.v3"
 	"strconv"
+
+	tele "gopkg.in/telebot.v3"
 )
 
 const (
@@ -178,6 +179,52 @@ func (h *GroupTgHandler) FinishSession(c tele.Context) error {
 
 	responseText += "Сессия завершена! Итоговые траты: \n" + bigSeparateString
 	responseText += h.createOutput(allCosts)
+
+	return c.Send(responseText)
+}
+
+func (h *GroupTgHandler) createOutputDebts(allDebts map[string]models.AllUserDebts) string {
+	var responseText string
+	for username, allUserDebts := range allDebts {
+		responseText += fmt.Sprintf("Пользователю @%s \n", username)
+
+		// Sorting for pretty output
+		allUserDebts.SortByDebt()
+
+		for _, cost := range allUserDebts.Debts {
+			responseText += fmt.Sprintf("@%s - %d рублей \n", cost.DebtorName, cost.Money)
+		}
+
+		responseText += bigSeparateString
+	}
+	return responseText
+}
+
+func (h *GroupTgHandler) GetDebts(c tele.Context) error {
+	var responseText string
+	h.log.Infof("Recieved message from %s, text = %s", c.Message().Sender.Username, c.Text())
+
+	info := dto.GetDebtsDTO{
+		ChatID: c.Chat().ID,
+	}
+
+	allDebts, err := h.usecase.GetAllDebts(info)
+
+	if err == usecase.SessionNotExistsErr {
+		return c.Send("Для выполнения этой команды нужно начать сессию!")
+	}
+
+	if err != nil {
+		h.log.Warnf("Get debts err: %v", err)
+		return c.Send("Извини, техническая ошибка :(")
+	}
+
+	if len(allDebts) == 0 {
+		return c.Send("Трат пока еще не было :(")
+	}
+
+	responseText += "Все долги на текущий момент\n" + bigSeparateString
+	responseText += h.createOutputDebts(allDebts)
 
 	return c.Send(responseText)
 }
